@@ -1,0 +1,20 @@
+name: Build EXE via Makefile
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Make
+      run: choco install make -y
+
+    - name: Run Makefile
+      run: make all
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4  # 已更新版本
+      with:
+        name: output-exe
+        path: bin/*.exe
