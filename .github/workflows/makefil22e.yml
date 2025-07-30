@@ -6,13 +6,14 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Set up Make
-      run: choco install make -y
-
-    - name: Run Makefile
-      run: make all
-
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: git make mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-dlfcn
+    - name: Build
+      run: |
+        make -j$(getconf _NPROCESSORS_ONLN) CONFIG_WERROR=y
     - name: Upload Artifact
       uses: actions/upload-artifact@v4  # 已更新版本
       with:
