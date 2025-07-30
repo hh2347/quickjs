@@ -1,21 +1,36 @@
-name: Build EXE via Makefile
+
+name: Build quickjs on Windows
+
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        update: true
-        install: git make mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-dlfcn
-    - name: Build
-      run: |
-        make -j$(getconf _NPROCESSORS_ONLN) CONFIG_WERROR=y
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4  # 已更新版本
-      with:
-        name: output-exe
-        path: bin/*.exe
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >
+            git
+            make
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-dlfcn
+
+      - name: Build all
+        shell: msys2 {0}
+        run: |
+          make -j$(nproc) CONFIG_WERROR=y
+
+      - name: List build results
+        shell: msys2 {0}
+        run: |
+          ls -l bin
+
+      - name: Upload all build files
+        uses: actions/upload-artifact@v4
+        with:
+          name: quickjs-windows-artifacts
+          path: bin/*
