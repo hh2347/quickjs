@@ -5,27 +5,35 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: MinGW Windows target
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-
-      - uses: msys2/setup-msys2@v2
         with:
-          msystem: UCRT64
-          update: true
-          install: >
-            git
-            make
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-dlfcn
-
-      - name: Build all
-        shell: msys2 {0}
+          submodules: true
+      - name: Install MinGW and Wine
         run: |
-          make -j$(nproc) CONFIG_WERROR=y
-
+          sudo apt update
+          sudo apt install -y wine mingw-w64
+          cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll .
+      - name: Setup Wine
+        run: |
+          wine --version
+          winecfg /v
+          # binfmt doesn't work in GitHub Actions
+          #sudo apt install -y binfmt-support wine-binfmt
+          #echo ":Wine:M::MZ::/usr/bin/wine:" > /etc/binfmt.d/wine.conf
+          #sudo systemctl restart systemd-binfmt
+      - name: Build
+        run: |
+          make CONFIG_WIN32=y
+      - name: Run built-in tests
+        run: |
+          # If binfmt support worked, could just run `make CONFIG_WIN32=y test`
+          make WINE=/usr/bin/wine CONFIG_WIN32=y test
       - name: List build results
-        shell: msys2 {0}
         run: |
           ls -l .
       
